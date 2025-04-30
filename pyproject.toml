@@ -1,0 +1,3 @@
+[tool.poetry]
+name = "diabetes-readmit"
+version = "0.0.1"
