@@ -1,3 +1,15 @@
 apiVersion: v2
-name: diabetes
-version: 0.1.0
+name: diabetes-mlops
+description: MLOps platform for diabetes readmission prediction
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - mlops
+  - machine-learning
+  - diabetes
+  - healthcare
+home: https://github.com/Rokcernejr/diabetes-mlops
+maintainers:
+  - name: MLOps Team
+    email: rokcernejr1@gmail.com

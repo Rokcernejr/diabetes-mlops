@@ -1,0 +1,16 @@
+{{- if .Values.monitoring.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "diabetes-mlops.fullname" . }}
+  labels:
+    {{- include "diabetes-mlops.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "diabetes-mlops.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      path: {{ .Values.monitoring.serviceMonitor.path }}
+      interval: {{ .Values.monitoring.serviceMonitor.interval }}
+{{- end }}

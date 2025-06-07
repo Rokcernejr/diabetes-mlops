@@ -1,0 +1,19 @@
+﻿# config/development.yaml
+environment: development
+debug: true
+log_level: INFO
+
+database:
+  url: postgresql://postgres:postgres@localhost:5432/mlflow
+  
+mlflow:
+  tracking_uri: http://localhost:5000
+  experiment_name: diabetes-dev
+
+model:
+  retrain_threshold: 0.05  # Retrain if AUC drops by 5%
+  min_samples: 1000       # Minimum samples for training
+  
+monitoring:
+  enable_drift_detection: true
+  drift_threshold: 0.1

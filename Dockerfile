@@ -1,1 +1,30 @@
-# stub
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl gcc g++ && rm -rf /var/lib/apt/lists/*
+
+# Install core packages first
+RUN pip install --no-cache-dir \
+    fastapi>=0.104.0 \
+    "uvicorn[standard]>=0.24.0" \
+    pydantic>=2.5.0
+
+# Copy pyproject.toml and install via Poetry (for dependency management)
+COPY pyproject.toml ./
+RUN pip install poetry==1.8.2 && \
+    poetry config virtualenvs.create false && \
+    poetry install --only main --no-interaction --no-ansi
+
+# Copy application code
+COPY app/ ./app/
+COPY ml/ ./ml/
+RUN touch app/__init__.py ml/__init__.py
+
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["uvicorn", "app.main:app", "--host=0.0.0.0", "--port=8000", "--reload"]

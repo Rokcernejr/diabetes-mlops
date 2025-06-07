@@ -1,0 +1,11 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "diabetes-mlops.fullname" . }}
+  labels:
+    {{- include "diabetes-mlops.labels" . | nindent 4 }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "diabetes-mlops.selectorLabels" . | nindent 6 }}

@@ -1,0 +1,23 @@
+﻿# config/production.yaml
+environment: production
+debug: false
+log_level: WARNING
+
+database:
+  url: \
+  
+mlflow:
+  tracking_uri: \
+  experiment_name: diabetes-prod
+
+model:
+  retrain_threshold: 0.02
+  min_samples: 5000
+  
+monitoring:
+  enable_drift_detection: true
+  drift_threshold: 0.05
+  
+security:
+  enable_auth: true
+  rate_limiting: true
