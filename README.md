@@ -120,7 +120,7 @@ You now have a **complete enterprise MLOps pipeline** with:
 ### **Phase 1: Basic Local Testing**
 ```powershell
 # 1. Test enhanced pipeline (your test script)
-.\test_enhanced_pipeline.ps1
+.\test_data_pipeline.ps1
 
 # 2. Verify all services are healthy
 docker-compose ps
@@ -907,10 +907,8 @@ This implementation guide provides a complete roadmap from your current state to
 .\run_all_tests.ps1
 
 # 2. Individual tests available:
-.\load_test.ps1 -Requests 50 -Concurrent 10
 .\test_data_pipeline.ps1  
 .\test_model_consistency.ps1
-.\test_enhanced_pipeline.ps1
 
 # 3. Manual integration steps:
 # - Add validation to schemas.py (see enhanced_validation.txt)
