@@ -1,23 +1,37 @@
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
-from datetime import datetime, timedelta
+from airflow.operators.python import PythonOperator, ShortCircuitOperator
+from datetime import datetime
+import pandas as pd
+import yaml
+from pathlib import Path
 
-def check_model_performance():
-    # Load current model metrics
-    # Compare against thresholds
-    # Return True if retraining needed
-    pass
+from monitoring.data_drift import detect_drift
+from ml.train import train_diabetes_model
+
+def check_model_performance() -> bool:
+    """Check for data drift and decide if retraining is needed."""
+    config_file = Path("config/development.yaml")
+    threshold = 0.1
+    method = "kl"
+    if config_file.exists():
+        with open(config_file) as f:
+            cfg = yaml.safe_load(f)
+        threshold = cfg.get("monitoring", {}).get("drift_threshold", threshold)
+        method = cfg.get("monitoring", {}).get("drift_method", method)
+
+    ref = pd.read_parquet("data/reference.parquet")
+    cur = pd.read_parquet("data/current.parquet")
+    columns = [c for c in ref.columns if c in cur.columns and c != "readmitted"]
+    return detect_drift(ref, cur, columns, method=method, threshold=threshold)
 
 def retrain_model():
-    # Trigger model training
-    # Evaluate new model
-    # Compare against current model
-    # Deploy if better
-    pass
+    """Retrain the model using the latest processed data."""
+    data_path = Path("data/current.parquet")
+    model_path = Path("models/latest_model.joblib")
+    train_diabetes_model(data_path, model_path, use_mlflow=False)
 
 def notify_team(context):
-    # Send notification about retraining results
-    pass
+    print("Model retraining completed")
 
 dag = DAG(
     'diabetes_model_retraining',
@@ -27,7 +41,7 @@ dag = DAG(
     start_date=datetime(2025, 1, 1)
 )
 
-check_task = PythonOperator(
+check_task = ShortCircuitOperator(
     task_id='check_performance',
     python_callable=check_model_performance,
     dag=dag
