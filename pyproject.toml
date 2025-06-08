@@ -41,19 +41,17 @@ dependencies = [
     "python-json-logger>=2.0.0"
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.4.0",
-    "pytest-cov>=4.1.0",
-    "pytest-asyncio>=0.21.0",
-    "ruff>=0.1.0",
-    "black>=23.9.0",
-    "mypy>=1.6.0",
-    "pre-commit>=3.5.0",
-    "httpx>=0.25.0",
-    "pytest-mock>=3.11.0",
-    "responses>=0.23.0"
-]
+[tool.poetry.group.dev.dependencies]
+pytest = ">=7.4.0"
+pytest-cov = ">=4.1.0"
+pytest-asyncio = ">=0.21.0"
+ruff = ">=0.1.0"
+black = ">=23.9.0"
+mypy = ">=1.6.0"
+pre-commit = ">=3.5.0"
+httpx = ">=0.25.0"
+pytest-mock = ">=3.11.0"
+responses = ">=0.23.0"
 
 [tool.poetry]
 package-mode = false

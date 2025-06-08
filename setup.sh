@@ -29,7 +29,7 @@ make install-tools
 pre-commit install
 
 # Install dependencies
-poetry install
+poetry install --with dev
 
 # Run health check
 make health-check
