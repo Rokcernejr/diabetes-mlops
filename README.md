@@ -312,6 +312,7 @@ model:
 monitoring:
   enable_drift_detection: true
   drift_threshold: 0.1
+  drift_method: kl
 "@ | Out-File -FilePath config/development.yaml -Encoding utf8
 
 # Production config
@@ -335,10 +336,16 @@ model:
 monitoring:
   enable_drift_detection: true
   drift_threshold: 0.05
+  drift_method: kl
   
 security:
   enable_auth: true
   rate_limiting: true
+### Drift Detection
+Configure `drift_threshold` and `drift_method` under the `monitoring` section in the config files.
+The `model_retraining_dag` will retrain the model when the average divergence exceeds this threshold.
+Trigger the DAG via Airflow or `airflow dags trigger diabetes_model_retraining`.
+
 "@ | Out-File -FilePath config/production.yaml -Encoding utf8
 ```
 
