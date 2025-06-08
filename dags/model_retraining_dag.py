@@ -51,8 +51,7 @@ def retrain_model() -> None:
         pass
 
 def notify_team(context):
-    # Send notification about retraining results
-    pass
+    print("Model retraining completed")
 
 dag = DAG(
     'diabetes_model_retraining',

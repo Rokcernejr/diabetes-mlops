@@ -8,41 +8,29 @@ def compute_kl_divergence(ref: pd.DataFrame, cur: pd.DataFrame, columns: List[st
     """Compute average KL divergence across specified columns."""
     divergences = []
     for col in columns:
-        ref_values = ref[col].dropna()
-        cur_values = cur[col].dropna()
-        combined = pd.concat([ref_values, cur_values])
-        bins = np.histogram_bin_edges(combined, bins="auto")
-        ref_hist, _ = np.histogram(ref_values, bins=bins, density=True)
-        cur_hist, _ = np.histogram(cur_values, bins=bins, density=True)
-        ref_hist += 1e-8
-        cur_hist += 1e-8
-        divergences.append(entropy(ref_hist, cur_hist))
-    return float(np.mean(divergences))
+        if col not in ref.columns or col not in cur.columns:
+            continue
+        ref_dist = np.histogram(ref[col], bins=20, density=True)[0] + 1e-9
+        cur_dist = np.histogram(cur[col], bins=20, density=True)[0] + 1e-9
+        divergences.append(entropy(ref_dist, cur_dist))
+    return float(np.mean(divergences)) if divergences else 0.0
 
 
 def compute_ks_statistic(ref: pd.DataFrame, cur: pd.DataFrame, columns: List[str]) -> float:
-    """Compute average Kolmogorov–Smirnov statistic across columns."""
+    """Compute average KS statistic across specified columns."""
     stats = []
     for col in columns:
-        stat, _ = ks_2samp(ref[col].dropna(), cur[col].dropna())
+        if col not in ref.columns or col not in cur.columns:
+            continue
+        stat, _ = ks_2samp(ref[col], cur[col])
         stats.append(stat)
-    return float(np.mean(stats))
+    return float(np.mean(stats)) if stats else 0.0
 
 
-def detect_drift(
-    ref: pd.DataFrame,
-    cur: pd.DataFrame,
-    columns: List[str] | None = None,
-    method: str = "kl",
-    threshold: float = 0.1,
-) -> bool:
-    """Return True if average divergence exceeds the given threshold."""
-    if columns is None:
-        columns = [c for c in ref.columns if c in cur.columns]
+def detect_drift(ref: pd.DataFrame, cur: pd.DataFrame, columns: List[str], method: str = "kl", threshold: float = 0.1) -> bool:
+    """Return True if average divergence exceeds the threshold."""
     if method == "kl":
         score = compute_kl_divergence(ref, cur, columns)
-    elif method == "ks":
-        score = compute_ks_statistic(ref, cur, columns)
     else:
-        raise ValueError(f"Unsupported drift detection method: {method}")
+        score = compute_ks_statistic(ref, cur, columns)
     return score > threshold

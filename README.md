@@ -922,3 +922,6 @@ This implementation guide provides a complete roadmap from your current state to
 # - Add logging to main.py (see logging_config.py)
 # - Update pyproject.toml (see pyproject_additions.txt)
 # - Update docker-compose.yml (see docker_compose_update.txt)
+
+## Data Drift Detection
+The model retraining DAG uses KL or KS divergence to automatically trigger retraining when the current data drifts from the reference training set. Configure the method and threshold in `config/*yaml` under the `monitoring` section.
