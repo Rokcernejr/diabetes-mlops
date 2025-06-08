@@ -1,8 +1,10 @@
-﻿# Add this function to ml/train.py
-import logger
+# Add this function to ml/train.py
+import logging
 from pathlib import Path
 from typing import Dict, Any
 from ml.train import train_diabetes_model
+
+logger = logging.getLogger(__name__)
 
 def test_model_consistency(data_path: Path, n_trials: int = 3) -> Dict[str, float]:
     """Test model training consistency"""
