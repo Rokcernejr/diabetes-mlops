@@ -380,7 +380,7 @@ def preprocess_diabetes_data(file_path: Path, output_path: Path = None) -> Tuple
 
 
 
-#Generalized Verions
+# Generalized Version
 """
 import pandas as pd
 import numpy as np
