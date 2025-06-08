@@ -36,7 +36,7 @@ def check_model_performance() -> bool:
     columns = [c for c in ref.columns if c in cur.columns]
     threshold = CONFIG.get("monitoring", {}).get("drift_threshold", 0.1)
     method = CONFIG.get("monitoring", {}).get("drift_method", "kl")
-    return detect_drift(ref[columns], cur[columns], method=method, threshold=threshold)
+    return detect_drift(ref, cur, columns=columns, method=method, threshold=threshold)
 
 def retrain_model() -> None:
     """Retrain the diabetes model using latest processed data."""
