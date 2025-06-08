@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-from typing import List
 from scipy.stats import entropy, ks_2samp
+from typing import List
 
 
 def compute_kl_divergence(ref: pd.DataFrame, cur: pd.DataFrame, columns: List[str]) -> float:
