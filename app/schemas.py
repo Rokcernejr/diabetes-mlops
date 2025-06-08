@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import List, Optional
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import pandas as pd
 
 class PredictionRequest(BaseModel):
@@ -23,38 +23,35 @@ class PredictionRequest(BaseModel):
         """Convert request to DataFrame for model prediction"""
         return pd.DataFrame([self.model_dump()])
 
-    @validator("time_in_hospital", pre=False)
-    def validate_hospital_stay(cls, v):
+    @field_validator("time_in_hospital")
+    @classmethod
+    def validate_hospital_stay(cls, v: int) -> int:
         if not 1 <= v <= 14:
             raise ValueError("time_in_hospital must be between 1 and 14 days")
         return v
 
-    @validator("num_medications", pre=False)
-    def validate_medications(cls, v):
+      
+    @field_validator("num_medications")
+    @classmethod
+    def validate_medications(cls, v: int) -> int:
         if not 0 <= v <= 50:
             raise ValueError("num_medications must be between 0 and 50")
         return v
 
-    @validator("age", pre=False)
-    def validate_age_format(cls, v):
+    @field_validator("age")
+    @classmethod
+    def validate_age_format(cls, v: str) -> str:
         valid_ages = [
-            "[0-10)",
-            "[10-20)",
-            "[20-30)",
-            "[30-40)",
-            "[40-50)",
-            "[50-60)",
-            "[60-70)",
-            "[70-80)",
-            "[80-90)",
-            "[90-100)",
+            "[0-10)", "[10-20)", "[20-30)", "[30-40)", "[40-50)",
+            "[50-60)", "[60-70)", "[70-80)", "[80-90)", "[90-100)"
         ]
         if v not in valid_ages:
             raise ValueError(f"age must be one of: {valid_ages}")
         return v
 
-    @validator("gender", pre=False)
-    def validate_gender(cls, v):
+    @field_validator("gender")
+    @classmethod
+    def validate_gender(cls, v: str) -> str:
         if v not in ["Male", "Female", "Unknown"]:
             raise ValueError("gender must be Male, Female, or Unknown")
         return v

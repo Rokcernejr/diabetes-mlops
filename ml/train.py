@@ -484,7 +484,7 @@ def generate_model_report(model, metrics: Dict[str, float], feature_names: List[
 
 
 
-#Generalized Verion
+# Generalized Version
 """
 import pandas as pd
 import numpy as np
