@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field, field_validator
 import pandas as pd
 
@@ -30,6 +30,7 @@ class PredictionRequest(BaseModel):
             raise ValueError("time_in_hospital must be between 1 and 14 days")
         return v
 
+      
     @field_validator("num_medications")
     @classmethod
     def validate_medications(cls, v: int) -> int:
