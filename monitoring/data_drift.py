@@ -17,20 +17,27 @@ def compute_kl_divergence(ref: pd.DataFrame, cur: pd.DataFrame, columns: List[st
 
 
 def compute_ks_statistic(ref: pd.DataFrame, cur: pd.DataFrame, columns: List[str]) -> float:
-    """Compute average KS statistic across specified columns."""
-    stats = []
+    """Compute average KS p-value across specified columns."""
+    p_values = []
     for col in columns:
         if col not in ref.columns or col not in cur.columns:
             continue
-        stat, _ = ks_2samp(ref[col], cur[col])
-        stats.append(stat)
-    return float(np.mean(stats)) if stats else 0.0
+        _, p_val = ks_2samp(ref[col], cur[col])
+        p_values.append(p_val)
+    return float(np.mean(p_values)) if p_values else 1.0
 
 
-def detect_drift(ref: pd.DataFrame, cur: pd.DataFrame, columns: List[str], method: str = "kl", threshold: float = 0.1) -> bool:
-    """Return True if average divergence exceeds the threshold."""
+def detect_drift(
+    ref: pd.DataFrame,
+    cur: pd.DataFrame,
+    columns: List[str],
+    method: str = "kl",
+    threshold: float = 0.1,
+) -> bool:
+    """Return True if data drift is detected."""
     if method == "kl":
         score = compute_kl_divergence(ref, cur, columns)
+        return score > threshold
     else:
-        score = compute_ks_statistic(ref, cur, columns)
-    return score > threshold
+        p_val = compute_ks_statistic(ref, cur, columns)
+        return p_val < threshold
