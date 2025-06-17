@@ -1,4 +1,4 @@
-.PHONY: help setup dev health-check test lint build clean
+.PHONY: help setup dev health-check test lint build clean install-tools
 
 help:
 	@echo Available commands:
@@ -36,3 +36,6 @@ clean:
 
 stop:
 	docker-compose down
+
+install-tools:
+	poetry run pip install --upgrade pre-commit ruff black
