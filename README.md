@@ -14,6 +14,18 @@ For Testing (No Changes Needed):
 ✅ Local development - All defaults work
 ✅ Docker Compose - Uses localhost URLs
 ✅ Dummy model - No real model needed
+
+## Installation
+
+1. Install [Poetry](https://python-poetry.org/docs/#installation).
+2. Install project dependencies:
+   ```bash
+   poetry install
+   ```
+3. Install pre-commit hooks:
+   ```bash
+   pre-commit install
+   ```
 """
 
 
