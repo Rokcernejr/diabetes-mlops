@@ -18,7 +18,7 @@ ENVIRONMENT=${ENVIRONMENT}
 AWS_REGION=${AWS_REGION}
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "CHANGE_ME")
 DOMAIN=${PROJECT_NAME}.local
-ECR_URI=\${AWS_ACCOUNT_ID}.dkr.ecr.\${AWS_REGION}.amazonaws.com
+ECR_URI=\${209479289560}.dkr.ecr.\${AWS_REGION}.amazonaws.com
 EOF
 fi
 
