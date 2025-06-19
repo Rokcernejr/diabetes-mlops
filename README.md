@@ -611,7 +611,6 @@ cd infra
 terraform init
 terraform apply
 ```
-
 ### **Phase 2: Security Implementation**
 
 #### **1. Authentication Setup**
