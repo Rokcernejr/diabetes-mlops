@@ -20,14 +20,14 @@ ingress:
     nginx.ingress.kubernetes.io/rewrite-target: /
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
-    - host: api.diabetes.yourdomain.com
+    - host: api.diabetes.conai.online
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: diabetes-tls
       hosts:
-        - api.diabetes.yourdomain.com
+        - api.diabetes.conai.online
 
 resources:
   limits:

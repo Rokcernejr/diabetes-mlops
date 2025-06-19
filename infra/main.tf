@@ -20,6 +20,11 @@ terraform {
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
+# Add missing availability zones data source
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 locals {
   # Smart naming with environment prefix
   name_prefix = "${var.environment}-diabetes"
@@ -109,6 +114,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "buckets" {
   rule {
     id     = "transition-to-ia"
     status = "Enabled"
+    
+    filter {
+      prefix = ""
+    }
     
     transition {
       days          = 30
