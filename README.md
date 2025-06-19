@@ -1,9 +1,9 @@
 """
-For Production (Replace Later):
+For Production (example values)
 
-🔄 TODO_AWS_ECR_URI - Your AWS ECR repository URI
-🔄 TODO_DOMAIN - Your public domain
-🔄 TODO_AUTH_DOMAIN - Auth0/Keycloak domain (optional for testing)
+AWS ECR URI: 209479289560.dkr.ecr.us-east-1.amazonaws.com/diabetes-mlops
+DOMAIN: conai.online
+AUTH_DOMAIN: <your-auth-domain>
 """
 
 
@@ -588,6 +588,20 @@ kubectl get secret diabetes-secrets
 #### **5. EKS Cluster Creation**
 ```bash
 eksctl create cluster --name conai-cluster --region us-east-1 --nodegroup-name conai-nodes --node-type t3.medium --nodes 2
+```
+
+#### **6. Terraform Credentials**
+```
+# Export AWS credentials so Terraform can authenticate
+export AWS_ACCESS_KEY_ID=<your-access-key>
+export AWS_SECRET_ACCESS_KEY=<your-secret-key>
+# Optional if using temporary credentials
+export AWS_SESSION_TOKEN=<your-session-token>
+
+# Initialize and apply the Terraform configuration
+cd infra
+terraform init
+terraform apply
 ```
 
 ### **Phase 2: Security Implementation**
