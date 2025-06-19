@@ -510,6 +510,14 @@ CREATE INDEX idx_model_metrics_version ON model_metrics(model_version);
 
 ### **Phase 1: Infrastructure Preparation**
 
+#### AWS Quickstart Steps
+1. Enable core services: EKS, ECR, RDS, S3, IAM, VPC, and CloudWatch.
+2. Configure the AWS CLI and verify your identity.
+3. Request an ACM certificate for your domain via Route53.
+4. Create an ECR repository and log Docker in.
+5. Provision the database and create secrets.
+6. Spin up the EKS cluster and apply Terraform.
+
 #### **1. AWS Account Setup**
 ```bash
 # Required AWS services to enable:
@@ -532,8 +540,8 @@ aws sts get-caller-identity
 # 2. Set up Route53 hosted zone
 # 3. Request SSL certificate via ACM
 aws acm request-certificate \
-  --domain-name api.yourdomain.com \
-  --domain-name *.yourdomain.com \
+  --domain-name api.conai.online \
+  --domain-name *.conai.online \
   --validation-method DNS
 ```
 
@@ -543,15 +551,65 @@ aws acm request-certificate \
 aws ecr create-repository --repository-name diabetes-mlops --region us-east-1
 
 # Get login token
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin YOUR_ACCOUNT.dkr.ecr.us-east-1.amazonaws.com
+aws ecr get-login-password --region us-east-1 | \
+  docker login --username AWS \
+  --password-stdin 209479289560.dkr.ecr.us-east-1.amazonaws.com
 
 # Update .env with real values
 @"
-AWS_ACCOUNT_ID=123456789012
+AWS_ACCOUNT_ID=209479289560
 AWS_REGION=us-east-1
-ECR_URI=123456789012.dkr.ecr.us-east-1.amazonaws.com
-DOMAIN=yourdomain.com
+ECR_URI=209479289560.dkr.ecr.us-east-1.amazonaws.com
+DOMAIN=conai.online
 "@ | Out-File -FilePath .env.production -Encoding utf8
+```
+
+#### **4. Database Setup**
+```powershell
+# Create the RDS instance
+aws rds create-db-instance --db-instance-identifier conai-simple-db `
+  --db-instance-class db.t3.micro --engine postgres `
+  --master-username conaiuser --master-user-password "ConaiPass2024!" `
+  --allocated-storage 20 --region us-east-1
+
+# Wait for the database to be available (optional but recommended)
+Write-Host "Waiting for database to be available... This may take 5-10 minutes."
+aws rds wait db-instance-available --db-instance-identifier conai-simple-db
+
+# Obtain the endpoint
+$DB_ENDPOINT = aws rds describe-db-instances --db-instance-identifier conai-simple-db `
+  --query 'DBInstances[0].Endpoint.Address' --output text
+
+# Display the endpoint for verification
+Write-Host "Database endpoint: $DB_ENDPOINT"
+
+# Create the Kubernetes secret with that endpoint
+kubectl create secret generic diabetes-secrets `
+  --from-literal=database-url="postgresql://conaiuser:ConaiPass2024!@$DB_ENDPOINT`:5432/postgres" `
+  --from-literal=mlflow-uri="http://mlflow:5000" `
+  --from-literal=jwt-secret="conai-jwt-secret-super-secure-2024"
+
+# Verify the secret was created
+kubectl get secret diabetes-secrets
+```
+
+#### **5. EKS Cluster Creation**
+```bash
+eksctl create cluster --name conai-cluster --region us-east-1 --nodegroup-name conai-nodes --node-type t3.medium --nodes 2
+```
+
+#### **6. Terraform Credentials**
+```
+# Export AWS credentials so Terraform can authenticate
+export AWS_ACCESS_KEY_ID=<your-access-key>
+export AWS_SECRET_ACCESS_KEY=<your-secret-key>
+# Optional if using temporary credentials
+export AWS_SESSION_TOKEN=<your-session-token>
+
+# Initialize and apply the Terraform configuration
+cd infra
+terraform init
+terraform apply
 ```
 
 ### **Phase 2: Security Implementation**
