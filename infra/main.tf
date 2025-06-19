@@ -9,7 +9,7 @@ terraform {
   
   # Use Terraform Cloud for state management
   cloud {
-    organization = "your-org"
+    organization = "diabetes-mlops"
     workspaces {
       name = "diabetes-mlops"
     }
