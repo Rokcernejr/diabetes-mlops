@@ -1,7 +1,7 @@
 replicaCount: 2
 
 image:
-  repository: diabetes-mlops
+  repository: 209479289560.dkr.ecr.us-east-1.amazonaws.com/diabetes-mlops
   pullPolicy: IfNotPresent
   tag: "latest"
 
