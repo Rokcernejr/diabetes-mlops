@@ -510,6 +510,14 @@ CREATE INDEX idx_model_metrics_version ON model_metrics(model_version);
 
 ### **Phase 1: Infrastructure Preparation**
 
+#### AWS Quickstart Steps
+1. Enable core services: EKS, ECR, RDS, S3, IAM, VPC, and CloudWatch.
+2. Configure the AWS CLI and verify your identity.
+3. Request an ACM certificate for your domain via Route53.
+4. Create an ECR repository and log Docker in.
+5. Provision the database and create secrets.
+6. Spin up the EKS cluster and apply Terraform.
+
 #### **1. AWS Account Setup**
 ```bash
 # Required AWS services to enable:
@@ -590,6 +598,19 @@ kubectl get secret diabetes-secrets
 eksctl create cluster --name conai-cluster --region us-east-1 --nodegroup-name conai-nodes --node-type t3.medium --nodes 2
 ```
 
+#### **6. Terraform Credentials**
+```
+# Export AWS credentials so Terraform can authenticate
+export AWS_ACCESS_KEY_ID=<your-access-key>
+export AWS_SECRET_ACCESS_KEY=<your-secret-key>
+# Optional if using temporary credentials
+export AWS_SESSION_TOKEN=<your-session-token>
+
+# Initialize and apply the Terraform configuration
+cd infra
+terraform init
+terraform apply
+```
 ### **Phase 2: Security Implementation**
 
 #### **1. Authentication Setup**
