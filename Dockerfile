@@ -1,10 +1,6 @@
-FROM python:3.11-slim
+FROM python:3.11
 
 WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl gcc g++ && rm -rf /var/lib/apt/lists/*
 
 # Install core packages first (including prometheus-client)
 RUN pip install --no-cache-dir \
@@ -28,6 +24,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Optionally enable auto-reload by setting UVICORN_RELOAD to "--reload"
 ENV UVICORN_RELOAD=""
 CMD ["sh", "-c", "uvicorn app.main:app --host=0.0.0.0 --port=8000 ${UVICORN_RELOAD}"]
