@@ -6,11 +6,12 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl gcc g++ && rm -rf /var/lib/apt/lists/*
 
-# Install core packages first
+# Install core packages first (including prometheus-client)
 RUN pip install --no-cache-dir \
     fastapi>=0.104.0 \
     "uvicorn[standard]>=0.24.0" \
-    pydantic>=2.5.0
+    pydantic>=2.5.0 \
+    prometheus-client>=0.19.0
 
 # Copy pyproject.toml and install via Poetry (for dependency management)
 COPY pyproject.toml ./
