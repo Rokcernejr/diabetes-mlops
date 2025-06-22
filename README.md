@@ -593,6 +593,11 @@ kubectl create secret generic diabetes-secrets `
 kubectl get secret diabetes-secrets
 ```
 
+The Helm chart expects a secret named `diabetes-secrets` with the keys
+`database-url`, `mlflow-uri`, and `jwt-secret`. These values populate the
+`DATABASE_URL`, `MLFLOW_TRACKING_URI`, and `JWT_SECRET` environment variables in
+the deployment.
+
 #### **5. EKS Cluster Creation**
 ```bash
 eksctl create cluster --name conai-cluster --region us-east-1 --nodegroup-name conai-nodes --node-type t3.medium --nodes 2
@@ -636,6 +641,9 @@ kubectl create secret generic diabetes-secrets \
   --from-literal=database-url="postgresql://user:pass@host:5432/db" \
   --from-literal=mlflow-uri="https://mlflow.yourdomain.com" \
   --from-literal=jwt-secret="your-jwt-secret"
+
+# This secret is referenced by the Helm chart (see `values.yaml`) to
+# configure `DATABASE_URL`, `MLFLOW_TRACKING_URI`, and `JWT_SECRET`.
 
 # Or use AWS Secrets Manager
 aws secretsmanager create-secret \

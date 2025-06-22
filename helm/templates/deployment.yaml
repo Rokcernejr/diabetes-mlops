@@ -32,9 +32,20 @@ spec:
             - name: ENVIRONMENT
               value: {{ .Values.environment }}
             - name: MLFLOW_TRACKING_URI
-              value: {{ .Values.mlflow.uri }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: mlflow-uri
             - name: DATABASE_URL
-              value: {{ .Values.database.url }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: database-url
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: jwt-secret
           livenessProbe:
             httpGet:
               path: /health
