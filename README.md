@@ -947,6 +947,12 @@ class ModelRegistry:
 ### **Deployment**
 - [ ] Infrastructure provisioned via Terraform
 - [ ] Secrets properly configured
+- [ ] `mlflow-artifacts` bucket created in Minio before starting MLflow
+  ```bash
+  mc alias set minio http://localhost:9000 minioadmin minioadmin
+  mc mb minio/mlflow-artifacts
+  ```
+  See the [MLflow S3 storage guide](https://mlflow.org/docs/latest/ml/tracking.html#artifact-stores) for additional options.
 - [ ] SSL certificates installed
 - [ ] Database migrations applied
 - [ ] Application deployed via Helm
