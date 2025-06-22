@@ -58,3 +58,6 @@ monitoring:
     enabled: true
     interval: 30s
     path: /metrics
+
+secrets:
+  name: diabetes-secrets
