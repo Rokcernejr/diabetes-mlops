@@ -583,7 +583,10 @@ aws configure list
 ```bash
 # Pods not starting
 kubectl describe pod <pod-name> -n dev
-kubectl logs <pod-name> -n dev
+# Stream logs from all pods in the deployment
+kubectl logs -l app.kubernetes.io/name=diabetes-mlops -n dev
+# Or target a specific release
+kubectl logs deployment/<release-name>-diabetes-mlops -n dev
 
 # Model loading failures
 # Check MLflow connection and model registry
@@ -612,7 +615,9 @@ kubectl port-forward svc/grafana 3000:3000 -n monitoring
 kubectl port-forward svc/prometheus 9090:9090 -n monitoring
 
 # View application logs
-kubectl logs -f deployment/diabetes-dev -n dev
+kubectl logs -l app.kubernetes.io/name=diabetes-mlops -n dev
+# Or target a specific release
+kubectl logs deployment/<release-name>-diabetes-mlops -n dev
 ```
 
 ### Key Metrics to Watch
