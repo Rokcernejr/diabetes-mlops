@@ -17,6 +17,10 @@ model:
 monitoring:
   enable_drift_detection: true
   drift_threshold: 0.05
+
+alerting:
+  backend: slack
+  slack_webhook_env: SLACK_WEBHOOK_URL
   
 security:
   enable_auth: true
