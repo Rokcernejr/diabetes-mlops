@@ -128,8 +128,8 @@ jobs:
     
     - name: Run smoke tests
       run: |
-        kubectl wait --for=condition=ready pod -l app=diabetes-${{ env.ENVIRONMENT }} --timeout=300s
-        kubectl port-forward svc/diabetes-${{ env.ENVIRONMENT }} 8080:8000 &
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=diabetes-${{ env.ENVIRONMENT }} --timeout=300s
+        kubectl port-forward svc/diabetes-${{ env.ENVIRONMENT }}-diabetes-mlops 8080:8000 &
         sleep 10
         curl -f http://localhost:8080/health || exit 1
         curl -f http://localhost:8080/metrics || exit 1

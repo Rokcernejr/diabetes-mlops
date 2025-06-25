@@ -491,7 +491,7 @@ kubectl get pods -n dev
 kubectl get svc -n dev
 
 # Port forward to test locally
-kubectl port-forward svc/diabetes-dev 8080:8000 -n dev
+kubectl port-forward svc/diabetes-dev-diabetes-mlops 8080:8000 -n dev
 
 # Test the deployed API
 curl http://localhost:8080/health
