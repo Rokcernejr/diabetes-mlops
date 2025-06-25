@@ -597,6 +597,8 @@ The Helm chart expects a secret named `diabetes-secrets` with the keys
 `database-url`, `mlflow-uri`, and `jwt-secret`. These values populate the
 `DATABASE_URL`, `MLFLOW_TRACKING_URI`, and `JWT_SECRET` environment variables in
 the deployment.
+To enable Slack alerts, provide a `SLACK_WEBHOOK_URL` environment variable
+containing your Slack incoming webhook.
 
 #### **5. EKS Cluster Creation**
 ```bash
