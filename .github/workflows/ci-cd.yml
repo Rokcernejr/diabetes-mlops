@@ -115,7 +115,8 @@ jobs:
     
     - name: Update kubeconfig
       run: |
-        aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name eks-${{ env.ENVIRONMENT }}
+        aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.ENVIRONMENT == 'production' && 'prod-diabetes-eks' || 'conai-cluster' }}
+
     
     - name: Deploy with Helm
       run: |
