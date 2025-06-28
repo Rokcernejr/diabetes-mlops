@@ -23,7 +23,7 @@ ingress:
     - host: api.diabetes.conai.online
       paths:
         - path: /
-          pathType: Prefix
+          pathType: ImplementationSpecific  
   tls:
     - secretName: diabetes-tls
       hosts:

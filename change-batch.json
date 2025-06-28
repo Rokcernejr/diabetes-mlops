@@ -1,0 +1,17 @@
+{
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "api.diabetes.conai.online",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {
+            "Value": "af5a4c42c96ed4d9b860f3d5f46747f9-1481908931.us-east-1.elb.amazonaws.com"
+          }
+        ]
+      }
+    }
+  ]
+}
