@@ -1,0 +1,157 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Diabetes API Test with CORS</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        button { background: #007cba; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 10px 5px; }
+        button:hover { background: #005a87; }
+        .result { background: #f5f5f5; border: 1px solid #ddd; border-radius: 5px; padding: 15px; margin: 10px 0; font-family: monospace; }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        .loading { border-color: #ffc107; background: #fff3cd; }
+    </style>
+</head>
+<body>
+    <h1>🏥 Diabetes API Test (With CORS)</h1>
+    
+    <p><strong>API Endpoint:</strong> https://api.diabetes.conai.online/predict</p>
+    
+    <button onclick="testAPI()">Test API Call</button>
+    <button onclick="testAPIWithFetch()">Test with Fetch</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        async function testAPI() {
+            const resultsDiv = document.getElementById('results');
+            showLoading('Testing API with CORS headers...');
+            
+            try {
+                const response = await fetch('https://api.diabetes.conai.online/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        race: "Caucasian",
+                        gender: "Female",
+                        age: "[50-60)",
+                        time_in_hospital: 5,
+                        num_medications: 10,
+                        number_outpatient: 1,
+                        number_emergency: 0,
+                        number_inpatient: 0,
+                        number_diagnoses: 6,
+                        a1c_result: ">7",
+                        max_glu_serum: "None",
+                        change: "Ch",
+                        diabetesMed: "Yes"
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(HTTP : );
+                }
+                
+                const data = await response.json();
+                showSuccess(data);
+                
+            } catch (error) {
+                showError(error);
+            }
+        }
+        
+        async function testAPIWithFetch() {
+            console.log('🔍 Detailed fetch test with full error logging...');
+            
+            try {
+                console.log('📤 Sending request to API...');
+                const response = await fetch('https://api.diabetes.conai.online/predict', {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        race: "Caucasian",
+                        gender: "Female",
+                        age: "[50-60)",
+                        time_in_hospital: 5,
+                        num_medications: 10,
+                        number_outpatient: 1,
+                        number_emergency: 0,
+                        number_inpatient: 0,
+                        number_diagnoses: 6,
+                        a1c_result: ">7",
+                        max_glu_serum: "None",
+                        change: "Ch",
+                        diabetesMed: "Yes"
+                    })
+                });
+                
+                console.log('📥 Response received:', response);
+                console.log('📊 Response status:', response.status);
+                console.log('📋 Response headers:', response.headers);
+                
+                const data = await response.json();
+                console.log('✅ Data parsed:', data);
+                
+                showSuccess(data);
+                
+            } catch (error) {
+                console.error('❌ Detailed error:', error);
+                showError(error);
+            }
+        }
+        
+        function showLoading(message) {
+            document.getElementById('results').innerHTML = 
+                <div class="result loading">⏳ </div>;
+        }
+        
+        function showSuccess(data) {
+            document.getElementById('results').innerHTML = 
+                <div class="result success">
+                    <h3>✅ Success!</h3>
+                    <p><strong>Readmission Risk:</strong> </p>
+                    <p><strong>Probability:</strong> %</p>
+                    <p><strong>Model Version:</strong> </p>
+                    <p><strong>Timestamp:</strong> </p>
+                    <details>
+                        <summary>Raw Response</summary>
+                        <pre></pre>
+                    </details>
+                </div>;
+        }
+        
+        function showError(error) {
+            document.getElementById('results').innerHTML = 
+                <div class="result error">
+                    <h3>❌ Error</h3>
+                    <p><strong>Message:</strong> </p>
+                    <p><strong>Type:</strong> </p>
+                    <details>
+                        <summary>Troubleshooting</summary>
+                        <ul>
+                            <li>Check browser console for detailed errors</li>
+                            <li>Verify CORS headers are properly configured</li>
+                            <li>Try disabling browser security for testing</li>
+                            <li>Use PowerShell/Postman as alternatives</li>
+                        </ul>
+                    </details>
+                </div>;
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Initial test on page load
+        console.log('🏥 Diabetes API Test Page Loaded');
+        console.log('🔧 CORS headers should now be enabled');
+        console.log('📋 API Endpoint: https://api.diabetes.conai.online/predict');
+    </script>
+</body>
+</html>

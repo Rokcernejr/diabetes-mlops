@@ -1,0 +1,253 @@
+﻿===========================================
+DIABETES-MLOPS ENVIRONMENT BACKUP
+Created: 06/28/2025 17:13:41
+===========================================
+
+KUBERNETES CLUSTER INFO:
+Current Context: arn:aws:eks:us-east-1:209479289560:cluster/conai-cluster
+Current Namespace: 
+
+AWS CONFIGURATION:
+AWS Region: 
+AWS Profile: 
+
+KEY VARIABLES WE USED:
+LB_HOSTNAME: af5a4c42c96ed4d9b860f3d5f46747f9-1481908931.us-east-1.elb.amazonaws.com
+ZONE_ID: /hostedzone/Z05268271DZFTO66C6H75
+
+===========================================
+DEPLOYMENT STATUS:
+===========================================
+
+PODS IN PROD NAMESPACE:
+NAME                                            READY   STATUS             RESTARTS        AGE
+cm-acme-http-solver-7rfqr                       1/1     Running            0               166m
+diabetes-prod-diabetes-mlops-5558ccc89d-sxkrp   0/1     CrashLoopBackOff   50 (109s ago)   3h52m
+diabetes-prod-diabetes-mlops-76bbb59d6d-46h8w   1/1     Running            0               4d19h
+diabetes-prod-diabetes-mlops-76bbb59d6d-tb894   1/1     Running            0               4d19h
+
+
+PODS IN MLOPS NAMESPACE:
+NAME                       READY   STATUS    RESTARTS   AGE
+mlflow-cf974f69d-sq6vp     1/1     Running   0          4d19h
+postgres-95f5f9b5d-hxr9s   1/1     Running   0          4d19h
+
+
+INGRESS STATUS:
+NAME                           CLASS    HOSTS                       ADDRESS                                                                   PORTS   AGE
+cm-acme-http-solver-rhq6s      <none>   api.diabetes.conai.online   af5a4c42c96ed4d9b860f3d5f46747f9-1481908931.us-east-1.elb.amazonaws.com   80      166m
+diabetes-prod-diabetes-mlops   nginx    api.diabetes.conai.online   af5a4c42c96ed4d9b860f3d5f46747f9-1481908931.us-east-1.elb.amazonaws.com   80      8d
+
+
+CERTIFICATE STATUS:
+NAME           READY   SECRET         AGE
+diabetes-tls   False   diabetes-tls   170m
+
+
+LOADBALANCER SERVICES:
+NAME                       TYPE           CLUSTER-IP      EXTERNAL-IP                                                               PORT(S)                      AGE
+ingress-nginx-controller   LoadBalancer   10.100.120.63   af5a4c42c96ed4d9b860f3d5f46747f9-1481908931.us-east-1.elb.amazonaws.com   80:32336/TCP,443:32498/TCP   3d17h
+
+
+===========================================
+API ENDPOINTS:
+===========================================
+Main API: http://api.diabetes.conai.online
+Health Check: http://api.diabetes.conai.online/health
+Documentation: http://api.diabetes.conai.online/docs
+Metrics: http://api.diabetes.conai.online/metrics
+
+MLflow UI (requires port forwarding):
+kubectl port-forward svc/mlflow 5000:5000 -n mlops
+Then visit: http://localhost:5000
+
+===========================================
+QUICK RECONNECT COMMANDS:
+===========================================
+
+# Reconnect to cluster
+aws eks update-kubeconfig --region us-east-1 --name prod-diabetes-eks
+
+# Verify connection
+kubectl get pods -n prod
+kubectl get pods -n mlops
+
+# Test API
+curl http://api.diabetes.conai.online/health
+
+# Access MLflow UI
+kubectl port-forward svc/mlflow 5000:5000 -n mlops
+
+# Check certificate status
+kubectl get certificate diabetes-tls -n prod
+
+===========================================
+ALL ENVIRONMENT VARIABLES:
+===========================================
+
+Name                           Value                                                                                                                                  
+----                           -----                                                                                                                                  
+ALLUSERSPROFILE                C:\ProgramData                                                                                                                         
+APPDATA                        C:\Users\Rok Cerne\AppData\Roaming                                                                                                     
+ChocolateyInstall              C:\ProgramData\chocolatey                                                                                                              
+ChocolateyLastPathUpdate       133904476652446449                                                                                                                     
+CommonProgramFiles             C:\Program Files\Common Files                                                                                                          
+CommonProgramFiles(x86)        C:\Program Files (x86)\Common Files                                                                                                    
+CommonProgramW6432             C:\Program Files\Common Files                                                                                                          
+COMPUTERNAME                   ROKAFELLER-STAT                                                                                                                        
+ComSpec                        C:\WINDOWS\system32\cmd.exe                                                                                                            
+DriverData                     C:\Windows\System32\Drivers\DriverData                                                                                                 
+FPS_BROWSER_APP_PROFILE_STRING Internet Explorer                                                                                                                      
+FPS_BROWSER_USER_PROFILE_ST... Default                                                                                                                                
+HOMEDRIVE                      C:                                                                                                                                     
+HOMEPATH                       \Users\Rok Cerne                                                                                                                       
+LOCALAPPDATA                   C:\Users\Rok Cerne\AppData\Local                                                                                                       
+LOGONSERVER                    \\ROKAFELLER-STAT                                                                                                                      
+NUMBER_OF_PROCESSORS           16                                                                                                                                     
+OneDrive                       C:\Users\Rok Cerne\OneDrive                                                                                                            
+OneDriveConsumer               C:\Users\Rok Cerne\OneDrive                                                                                                            
+OS                             Windows_NT                                                                                                                             
+Path                           C:\Program Files\Python313\Scripts\;C:\Program Files\Python313\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\S...
+PATHEXT                        .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.PY;.PYW;.CPL                                                                    
+PROCESSOR_ARCHITECTURE         AMD64                                                                                                                                  
+PROCESSOR_IDENTIFIER           Intel64 Family 6 Model 141 Stepping 1, GenuineIntel                                                                                    
+PROCESSOR_LEVEL                6                                                                                                                                      
+PROCESSOR_REVISION             8d01                                                                                                                                   
+ProgramData                    C:\ProgramData                                                                                                                         
+ProgramFiles                   C:\Program Files                                                                                                                       
+ProgramFiles(x86)              C:\Program Files (x86)                                                                                                                 
+ProgramW6432                   C:\Program Files                                                                                                                       
+PSModulePath                   C:\Users\Rok Cerne\OneDrive\Documents\WindowsPowerShell\Modules;C:\Program Files\WindowsPowerShell\Modules;C:\WINDOWS\system32\Windo...
+PUBLIC                         C:\Users\Public                                                                                                                        
+SESSIONNAME                    Console                                                                                                                                
+SystemDrive                    C:                                                                                                                                     
+SystemRoot                     C:\WINDOWS                                                                                                                             
+TEMP                           C:\Users\Rok Cerne\AppData\Local\Temp                                                                                                  
+TMP                            C:\Users\Rok Cerne\AppData\Local\Temp                                                                                                  
+USERDOMAIN                     ROKAFELLER-STAT                                                                                                                        
+USERDOMAIN_ROAMINGPROFILE      ROKAFELLER-STAT                                                                                                                        
+USERNAME                       Rok Cerne                                                                                                                              
+USERPROFILE                    C:\Users\Rok Cerne                                                                                                                     
+VBOX_MSI_INSTALL_PATH          C:\Program Files\Oracle\VirtualBox\                                                                                                    
+windir                         C:\WINDOWS                                                                                                                             
+WSLENV                         WT_SESSION:WT_PROFILE_ID:                                                                                                              
+WT_PROFILE_ID                  {61c54bbd-c2c6-5271-96e7-009a87ff44bf}                                                                                                 
+WT_SESSION                     704acf58-3885-43ac-9ee3-9a1f0c021ea3                                                                                                   
+ZES_ENABLE_SYSMAN              1                                                                                                                                      
+
+
+
+
+===========================================
+KUBECTL CONFIGURATION:
+===========================================
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: DATA+OMITTED
+    server: https://0BF2649149397F539462780F032F6748.gr7.us-east-1.eks.amazonaws.com
+  name: arn:aws:eks:us-east-1:209479289560:cluster/conai-cluster
+- cluster:
+    certificate-authority-data: DATA+OMITTED
+    server: https://EEAC6F8F4B1B9CC2E5D47325A5E8D2F1.gr7.us-east-1.eks.amazonaws.com
+  name: arn:aws:eks:us-east-1:209479289560:cluster/prod-diabetes-eks
+- cluster:
+    certificate-authority-data: DATA+OMITTED
+    server: https://0BF2649149397F539462780F032F6748.gr7.us-east-1.eks.amazonaws.com
+  name: conai-cluster.us-east-1.eksctl.io
+contexts:
+- context:
+    cluster: arn:aws:eks:us-east-1:209479289560:cluster/conai-cluster
+    user: arn:aws:eks:us-east-1:209479289560:cluster/conai-cluster
+  name: arn:aws:eks:us-east-1:209479289560:cluster/conai-cluster
+- context:
+    cluster: arn:aws:eks:us-east-1:209479289560:cluster/prod-diabetes-eks
+    user: arn:aws:eks:us-east-1:209479289560:cluster/prod-diabetes-eks
+  name: arn:aws:eks:us-east-1:209479289560:cluster/prod-diabetes-eks
+- context:
+    cluster: conai-cluster.us-east-1.eksctl.io
+    user: iam-root-account@conai-cluster.us-east-1.eksctl.io
+  name: iam-root-account@conai-cluster.us-east-1.eksctl.io
+current-context: arn:aws:eks:us-east-1:209479289560:cluster/conai-cluster
+kind: Config
+preferences: {}
+users:
+- name: arn:aws:eks:us-east-1:209479289560:cluster/conai-cluster
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      args:
+      - --region
+      - us-east-1
+      - eks
+      - get-token
+      - --cluster-name
+      - conai-cluster
+      - --output
+      - json
+      command: aws
+      env: null
+      interactiveMode: IfAvailable
+      provideClusterInfo: false
+- name: arn:aws:eks:us-east-1:209479289560:cluster/prod-diabetes-eks
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      args:
+      - --region
+      - us-east-1
+      - eks
+      - get-token
+      - --cluster-name
+      - prod-diabetes-eks
+      - --output
+      - json
+      command: aws
+      env: null
+      interactiveMode: IfAvailable
+      provideClusterInfo: false
+- name: iam-root-account@conai-cluster.us-east-1.eksctl.io
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      args:
+      - eks
+      - get-token
+      - --output
+      - json
+      - --cluster-name
+      - conai-cluster
+      - --region
+      - us-east-1
+      command: aws
+      env:
+      - name: AWS_STS_REGIONAL_ENDPOINTS
+        value: regional
+      interactiveMode: IfAvailable
+      provideClusterInfo: false
+
+
+===========================================
+CURRENT DIRECTORY:
+===========================================
+C:\Users\Rok Cerne\diabetes-mlops
+
+===========================================
+RECENT HELM DEPLOYMENTS:
+===========================================
+NAME         	NAMESPACE    	REVISION	UPDATED                              	STATUS  	CHART                       	APP VERSION
+cert-manager 	cert-manager 	1       	2025-06-25 20:05:16.031405 -0400 EDT 	deployed	cert-manager-v1.18.1        	v1.18.1    
+diabetes-prod	prod         	8       	2025-06-28 13:21:03.2020763 -0400 EDT	deployed	diabetes-mlops-1.0.0        	1.0.0      
+ingress-nginx	ingress-nginx	2       	2025-06-28 14:04:54.4471799 -0400 EDT	deployed	ingress-nginx-4.12.3        	1.12.3     
+prometheus   	monitoring   	1       	2025-06-19 22:26:20.9923081 -0400 EDT	deployed	kube-prometheus-stack-75.3.6	v0.83.0    
+
+
+===========================================
+DOCKER IMAGES USED:
+===========================================
+Image Repository: 209479289560.dkr.ecr.us-east-1.amazonaws.com/diabetes-mlops
+Current Tag: v14
+
+===========================================
+END OF BACKUP
+===========================================

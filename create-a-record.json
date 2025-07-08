@@ -1,0 +1,20 @@
+{
+  "Changes": [
+    {
+      "Action": "CREATE",
+      "ResourceRecordSet": {
+        "Name": "api.diabetes.conai.online",
+        "Type": "A",
+        "TTL": 60,
+        "ResourceRecords": [
+          {
+            "Value": "44.207.247.168"
+          },
+          {
+            "Value": "54.227.0.186"
+          }
+        ]
+      }
+    }
+  ]
+}
