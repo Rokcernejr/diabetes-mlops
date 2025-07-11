@@ -49,10 +49,14 @@ jobs:
     - name: Install dependencies
       run: poetry install --with dev
     
+    - name: Install extra packages
+      run: pip install fastapi uvicorn[standard] pydantic prometheus-client
+   
     - name: Run tests
       run: |
         poetry run pytest --cov=app --cov=ml --cov-report=xml -v
     
+
     - name: Upload coverage
       uses: codecov/codecov-action@v3
 
