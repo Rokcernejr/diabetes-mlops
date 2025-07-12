@@ -64,12 +64,25 @@ app = FastAPI(
 )
 
 # Middleware
+# Configure CORS more explicitly depending on the environment
+if os.getenv("ENVIRONMENT") == "production":
+    allowed_origins = [
+        "https://diabetes.conai.online",
+        "https://www.diabetes.conai.online",
+        "http://localhost:3000",
+        "http://localhost:3001",
+    ]
+else:
+    allowed_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure based on environment
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 
@@ -156,7 +169,9 @@ async def predict(request: PredictionRequest, background_tasks: BackgroundTasks)
 
     except Exception as e:
         logger.error(f"Prediction error: {e}")
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Prediction failed: {str(e)}"
+        ) from e
 
 
 @app.get("/predict/explain")
@@ -184,11 +199,15 @@ async def explain_prediction(request: PredictionRequest):
             ],
         }
 
-    except ImportError:
-        raise HTTPException(status_code=501, detail="SHAP explanations not available")
+    except ImportError as e:
+        raise HTTPException(
+            status_code=501, detail="SHAP explanations not available"
+        ) from e
     except Exception as e:
         logger.error(f"Explanation error: {e}")
-        raise HTTPException(status_code=500, detail=f"Explanation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Explanation failed: {str(e)}"
+        ) from e
 
 
 @app.get("/model/info")
@@ -226,7 +245,9 @@ async def reload_model():
 
     except Exception as e:
         logger.error(f"Model reload failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Model reload failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Model reload failed: {str(e)}"
+        ) from e
 
 
 async def log_prediction(
