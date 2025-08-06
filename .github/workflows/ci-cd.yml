@@ -49,8 +49,6 @@ jobs:
     - name: Install dependencies
       run: poetry install --with dev
     
-    - name: Install extra packages
-      run: pip install fastapi uvicorn[standard] pydantic prometheus-client
    
     - name: Run tests
       run: |
