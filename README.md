@@ -88,12 +88,13 @@ run with zero infrastructure and never import MLflow.
 
 GitHub Actions ([.github/workflows/ci-cd.yml](.github/workflows/ci-cd.yml)):
 
+- **pull request** → test job only (lint + full suite); no image is built
 - **push to main** → test → build/push image to ECR (`sha-<sha>` tag) → deploy
   to the `development` namespace on `conai-cluster`
 - **tag `v*`** → same, but deploys to `production` on `prod-diabetes-eks`
-- Auth is keyless (OIDC role assumption); required repo secrets:
-  `AWS_ACCOUNT_ID`, `AWS_ROLE_ARN`, `SLACK_WEBHOOK`; optional repo variables:
-  `MLFLOW_URI`, `JWKS_URL`, `ISSUER`.
+- Required repo secrets (already configured): `AWS_ACCOUNT_ID`,
+  `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `SLACK_WEBHOOK`; optional repo
+  variables: `MLFLOW_URI`, `JWKS_URL`, `ISSUER`.
 
 The Helm chart creates the `diabetes-secrets` Secret from values by default
 (`secrets.create: true`); set it to `false` to manage the secret externally:
