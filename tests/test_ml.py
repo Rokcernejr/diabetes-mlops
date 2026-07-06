@@ -1,13 +1,8 @@
-import sys
-import pathlib
-
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-
 import numpy as np
 import pandas as pd
 import pytest
 
-from ml.train import validate_data, split_data
+from ml.train import split_data, validate_data
 
 
 def _make_df(n: int = 100) -> pd.DataFrame:
@@ -41,4 +36,3 @@ def test_split_data_stratified():
     # Stratification keeps roughly equal class balance
     assert abs(y_train.mean() - 0.5) < 0.05
     assert abs(y_test.mean() - 0.5) < 0.05
-

@@ -8,6 +8,10 @@ image:
 nameOverride: ""
 fullnameOverride: ""
 
+serviceAccount:
+  create: true
+  name: ""
+
 service:
   type: ClusterIP
   port: 8000
@@ -17,13 +21,12 @@ ingress:
   enabled: true
   className: "nginx"
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
     - host: api.diabetes.conai.online
       paths:
         - path: /
-          pathType: ImplementationSpecific  
+          pathType: ImplementationSpecific
   tls:
     - secretName: diabetes-tls
       hosts:
@@ -42,22 +45,23 @@ autoscaling:
   minReplicas: 2
   maxReplicas: 10
   targetCPUUtilizationPercentage: 70
-  targetMemoryUtilizationPercentage: 80
 
 environment: "production"
-
-mlflow:
-  uri: "http://mlflow.mlops.svc.cluster.local:5000"
-
-database:
-  url: "postgresql://postgres:postgres@postgres.mlops.svc.cluster.local:5432/mlflow"
 
 monitoring:
   enabled: true
   serviceMonitor:
-    enabled: true
+    # Requires the prometheus-operator CRDs on the cluster; enable explicitly.
+    enabled: false
     interval: 30s
     path: /metrics
 
 secrets:
+  # Render helm/templates/secret.yaml from `data` below. Set create: false to
+  # manage the secret externally (kubectl / ExternalSecrets).
+  create: true
   name: diabetes-secrets
+  data:
+    mlflow-uri: "http://mlflow.mlops.svc.cluster.local:5000"
+    jwks-url: ""
+    issuer: ""

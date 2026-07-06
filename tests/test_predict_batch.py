@@ -1,8 +1,3 @@
-import pathlib
-import sys
-
-sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
-
 import pandas as pd
 
 from app.schemas import PredictionRequest

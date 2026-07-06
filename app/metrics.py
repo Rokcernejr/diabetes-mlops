@@ -9,7 +9,7 @@ from prometheus_client import (
     generate_latest,
 )
 
-# Metrics
+# Metrics — registered here and only here; app.main imports from this module.
 REQUEST_COUNT = Counter(
     "api_requests_total", "Total API requests", ["method", "endpoint", "status_code"]
 )
@@ -43,24 +43,31 @@ class MetricsMiddleware:
 
         request = Request(scope, receive)
         start_time = time.time()
+        responded = False
 
         # Increment active connections
         ACTIVE_CONNECTIONS.inc()
 
         async def send_wrapper(message):
+            nonlocal responded
             if message["type"] == "http.response.start":
+                responded = True
                 status_code = message["status"]
                 duration = time.time() - start_time
 
-                # Record metrics
+                # Label with the route template, not the raw path, so 404
+                # scans and path parameters can't explode label cardinality.
+                route = scope.get("route")
+                endpoint = route.path if route else "__unmatched__"
+
                 REQUEST_COUNT.labels(
                     method=request.method,
-                    endpoint=request.url.path,
+                    endpoint=endpoint,
                     status_code=status_code,
                 ).inc()
 
                 REQUEST_DURATION.labels(
-                    method=request.method, endpoint=request.url.path
+                    method=request.method, endpoint=endpoint
                 ).observe(duration)
 
                 # Decrement active connections
@@ -68,7 +75,12 @@ class MetricsMiddleware:
 
             await send(message)
 
-        await self.app(scope, receive, send_wrapper)
+        try:
+            await self.app(scope, receive, send_wrapper)
+        finally:
+            # The gauge must not leak when the app raises before a response starts
+            if not responded:
+                ACTIVE_CONNECTIONS.dec()
 
 
 def record_prediction(model_version: str = "1.0.0"):
