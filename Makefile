@@ -1,10 +1,13 @@
-.PHONY: help setup dev health-check test lint build clean install-tools
+.PHONY: help setup dev health-check smoke test test-unit lint build clean stop install-tools
 
 help:
 	@echo Available commands:
 	@echo   dev          - Start local development environment
 	@echo   health-check - Check service health
-	@echo   test         - Run tests
+	@echo   smoke        - Run smoke tests against localhost:8000
+	@echo   test         - Run full test suite
+	@echo   test-unit    - Run unit tests only (skip integration)
+	@echo   lint         - Auto-fix lint and formatting
 	@echo   clean        - Clean up resources
 
 dev:
@@ -18,14 +21,20 @@ dev:
 health-check:
 	@echo Checking service health...
 	docker-compose ps
-	@powershell -Command "try { Invoke-RestMethod http://localhost:8000/health } catch { Write-Host 'API not ready yet' }"
+	python -c "import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health').read().decode())"
+
+smoke:
+	python scripts/smoke_test.py
 
 test:
 	poetry run pytest tests/ -v
 
+test-unit:
+	poetry run pytest tests/ -v -m "not integration"
+
 lint:
-	poetry run ruff check . --fix
-	poetry run black .
+	poetry run ruff check app ml tests scripts --fix
+	poetry run black app ml tests scripts
 
 build:
 	docker build -t diabetes-mlops:dev .

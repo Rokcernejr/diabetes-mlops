@@ -1,59 +1,42 @@
 import logging
 import os
-import time
 from contextlib import asynccontextmanager
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Response
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
-from prometheus_client import (
-    CONTENT_TYPE_LATEST,
-    Counter,
-    Histogram,
-    generate_latest,
-)
 
+from app.auth import verify_token
 from app.deps import get_model
 from app.logging_config import setup_logging
+from app.metrics import MetricsMiddleware, generate_metrics, record_prediction
+from app.schemas import (
+    HealthResponse,
+    PredictionRequest,
+    PredictionResponse,
+    ShapResponse,
+    TopFeature,
+)
 
-# Import our schemas and dependencies
-from app.schemas import HealthResponse, PredictionRequest, PredictionResponse
-
-logger = setup_logging()
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+setup_logging()
 logger = logging.getLogger(__name__)
-
-# Metrics
-REQUEST_COUNT = Counter(
-    "api_requests_total", "Total API requests", ["method", "endpoint", "status"]
-)
-REQUEST_DURATION = Histogram("api_request_duration_seconds", "API request duration")
-PREDICTION_COUNT = Counter(
-    "ml_predictions_total", "Total ML predictions made", ["model_version"]
-)
-MODEL_ACCURACY = Counter("ml_model_accuracy", "Current model accuracy score")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan management"""
-    logger.info("🚀 Starting MLOps API...")
+    logger.info("Starting MLOps API...")
 
-    # Load model on startup
     try:
-        # Use our model loader
-        model = get_model()
-        app.state.model = model
-        logger.info("✅ Model loaded successfully")
-    except Exception as e:
-        logger.error(f"❌ Failed to load model: {e}")
-        # Continue startup but mark as unhealthy
+        app.state.model = get_model()
+        logger.info("Model loaded successfully")
+    except Exception:
+        logger.exception("Failed to load model")
+        # Continue startup; /ready reports 503 until a model is available
         app.state.model = None
 
     yield
 
-    logger.info("🛑 Shutting down MLOps API...")
+    logger.info("Shutting down MLOps API...")
 
 
 app = FastAPI(
@@ -63,31 +46,25 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Middleware
+
+def _cors_origins() -> list[str]:
+    return [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]
+
+
+_origins = _cors_origins()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure based on environment
-    allow_credentials=True,
+    allow_origins=_origins,
+    # Browsers reject credentialed requests against a wildcard origin
+    allow_credentials="*" not in _origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(MetricsMiddleware)
 
 
-@app.middleware("http")
-async def metrics_middleware(request, call_next):
-    """Add metrics to all requests"""
-    start_time = time.time()
-
-    response = await call_next(request)
-
-    # Record metrics
-    REQUEST_COUNT.labels(
-        method=request.method, endpoint=request.url.path, status=response.status_code
-    ).inc()
-
-    REQUEST_DURATION.observe(time.time() - start_time)
-
-    return response
+def _current_model():
+    return getattr(app.state, "model", None)
 
 
 @app.get("/")
@@ -103,165 +80,152 @@ async def root():
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
-    """Enhanced health check with model status"""
-    model_status = (
-        "healthy" if hasattr(app.state, "model") and app.state.model else "unhealthy"
-    )
+    """Liveness: the process is up (degraded if no model is loaded)"""
+    model_status = "healthy" if _current_model() else "unhealthy"
 
     return HealthResponse(
         status="healthy" if model_status == "healthy" else "degraded",
         model_status=model_status,
         version="1.0.0",
-        environment=os.getenv("ENVIRONMENT", "dev"),
+        environment=os.getenv("ENVIRONMENT", "development"),
     )
 
 
+@app.get("/ready")
+async def readiness_check():
+    """Readiness: only accept traffic once a model is loaded"""
+    if not _current_model():
+        raise HTTPException(status_code=503, detail="Model not loaded")
+    return {"status": "ready"}
+
+
 @app.get("/metrics")
-async def metrics():
+async def metrics() -> Response:
     """Prometheus metrics endpoint"""
-    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+    return generate_metrics()
 
 
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(request: PredictionRequest, background_tasks: BackgroundTasks):
-    """Make prediction with better error handling"""
-    # Check if model is available
-    if not hasattr(app.state, "model") or not app.state.model:
+    """Predict 30-day readmission for a single encounter"""
+    model = _current_model()
+    if not model:
         raise HTTPException(status_code=503, detail="Model not available")
 
     try:
-        # Convert to DataFrame
         df = request.as_dataframe()
 
-        # Make prediction
-        prediction = app.state.model.predict(df)[0]
-        probability = app.state.model.predict_proba(df)[0][1]
+        prediction = model.predict(df)[0]
+        probability = float(model.predict_proba(df)[0][1])
+        model_version = getattr(model, "version", "1.0.0")
 
-        # Get model version
-        model_version = getattr(app.state.model, "version", "1.0.0")
-
-        # Record prediction metric
-        PREDICTION_COUNT.labels(model_version=model_version).inc()
-
-        # Log prediction for monitoring (async)
+        record_prediction(model_version)
         background_tasks.add_task(
-            log_prediction, request.model_dump(), prediction, probability, model_version
+            log_prediction,
+            request.model_dump(),
+            int(prediction),
+            probability,
+            model_version,
         )
 
         return PredictionResponse(
             readmit=bool(prediction),
-            probability=float(probability),
+            probability=probability,
             model_version=model_version,
         )
 
-    except Exception as e:
-        logger.error(f"Prediction error: {e}")
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+    except Exception:
+        logger.exception("Prediction failed")
+        # Deliberately generic: error details can leak model internals/paths
+        raise HTTPException(status_code=500, detail="Prediction failed") from None
 
 
-@app.get("/predict/explain")
+@app.post("/predict/explain", response_model=ShapResponse)
 async def explain_prediction(request: PredictionRequest):
     """Get SHAP explanations for a prediction"""
-    if not hasattr(app.state, "model") or not app.state.model:
+    model = _current_model()
+    if not model:
         raise HTTPException(status_code=503, detail="Model not available")
 
     try:
-        # Import SHAP utilities
-        from app.shap_utils import explain_prediction, get_top_features
+        from app.shap_utils import explain_prediction as shap_explain
+        from app.shap_utils import get_top_features
+    except ImportError:
+        raise HTTPException(
+            status_code=501, detail="SHAP explanations not available"
+        ) from None
 
+    try:
         df = request.as_dataframe()
-        feature_names, shap_values, base_value = explain_prediction(app.state.model, df)
-
-        # Get top features
+        feature_names, shap_values, base_value = shap_explain(model, df)
         top_features = get_top_features(feature_names, shap_values, n_top=10)
 
-        return {
-            "feature_names": feature_names,
-            "shap_values": shap_values,
-            "base_value": base_value,
-            "top_features": [
-                {"feature": name, "importance": value} for name, value in top_features
+        return ShapResponse(
+            feature_names=feature_names,
+            shap_values=shap_values,
+            base_value=base_value,
+            top_features=[
+                TopFeature(feature=name, importance=value)
+                for name, value in top_features
             ],
-        }
+        )
 
-    except ImportError:
-        raise HTTPException(status_code=501, detail="SHAP explanations not available")
-    except Exception as e:
-        logger.error(f"Explanation error: {e}")
-        raise HTTPException(status_code=500, detail=f"Explanation failed: {str(e)}")
+    except Exception:
+        logger.exception("Explanation failed")
+        raise HTTPException(status_code=500, detail="Explanation failed") from None
 
 
 @app.get("/model/info")
 async def model_info():
     """Get information about the current model"""
-    if not hasattr(app.state, "model") or not app.state.model:
+    model = _current_model()
+    if not model:
         raise HTTPException(status_code=503, detail="Model not available")
-
-    model = app.state.model
 
     return {
         "model_name": getattr(model, "model_name", "Unknown"),
         "version": getattr(model, "version", "1.0.0"),
         "type": type(model).__name__,
         "features": getattr(model, "features", []),
-        "loaded_at": "startup",  # Could track actual load time
+        "loaded_at": "startup",
     }
 
 
 @app.post("/model/reload")
-async def reload_model():
-    """Reload the model (for development/testing)"""
+async def reload_model(user: dict = Depends(verify_token)):
+    """Force-reload the model from MLflow/local artifacts (authenticated)"""
     try:
-        # Reload model
-        new_model = get_model()
-        app.state.model = new_model
+        new_model = get_model(force=True)
+    except Exception:
+        logger.exception("Model reload failed")
+        raise HTTPException(status_code=500, detail="Model reload failed") from None
 
-        logger.info("🔄 Model reloaded successfully")
+    app.state.model = new_model
+    logger.info("Model reloaded successfully")
 
-        return {
-            "status": "success",
-            "message": "Model reloaded",
-            "model_version": getattr(new_model, "version", "1.0.0"),
-        }
-
-    except Exception as e:
-        logger.error(f"Model reload failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Model reload failed: {str(e)}")
+    return {
+        "status": "success",
+        "message": "Model reloaded",
+        "model_version": getattr(new_model, "version", "1.0.0"),
+    }
 
 
 async def log_prediction(
     input_data: dict, prediction: int, probability: float, model_version: str
 ):
     """Log prediction for monitoring and drift detection"""
-    # This would typically go to a metrics store or message queue
     logger.info(
         f"Prediction logged: {prediction} (prob: {probability:.3f}) model: {model_version}"
     )
-
-    # Could add additional logging here:
-    # - Send to MLflow
-    # - Store in database
-    # - Send to monitoring system
-    # - Calculate drift metrics
-
-
-# Additional development endpoints
-@app.get("/debug/request-stats")
-async def request_stats():
-    """Get request statistics (development only)"""
-    if os.getenv("ENVIRONMENT") != "development":
-        raise HTTPException(status_code=404, detail="Not found")
-
-    return {
-        "total_requests": REQUEST_COUNT._value._value,  # Access internal counter
-        "avg_duration": "calculated_from_histogram",  # Would need proper calculation
-        "model_predictions": PREDICTION_COUNT._value._value,
-    }
 
 
 if __name__ == "__main__":
     import uvicorn
 
+    # Import string (not the app object) — required by uvicorn for reload
     uvicorn.run(
-        app, host="0.0.0.0", port=8000, reload=os.getenv("ENVIRONMENT") == "development"
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=os.getenv("ENVIRONMENT", "development") == "development",
     )

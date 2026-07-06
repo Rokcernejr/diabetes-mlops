@@ -3,6 +3,14 @@ __pycache__/
 *.py[cod]
 .venv/
 .env
+.env.production
+
+# Data & model artifacts (download instructions in README)
+diabetic_data.csv
+data/
+models/
+mlruns/
+feature_importance.csv
 
 # Terraform
 *.tfstate
@@ -16,8 +24,3 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
-
-# Local data
-data/
-models/
-mlruns/

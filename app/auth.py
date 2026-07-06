@@ -1,9 +1,9 @@
 import os
+
 import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import PyJWKClient
-from fastapi import HTTPException, status, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional
 
 # Configuration
 JWKS_URL = os.getenv("JWKS_URL")
@@ -18,30 +18,31 @@ _jwk_client = None
 if JWKS_URL:
     _jwk_client = PyJWKClient(JWKS_URL)
 
-def verify_token(credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)):
+
+def verify_token(credentials: HTTPAuthorizationCredentials | None = Depends(security)):
     """Verify JWT token (optional in development)"""
-    
+
     # Skip authentication in development
     if os.getenv("ENVIRONMENT") == "development":
         return {"sub": "dev-user", "permissions": ["read", "write"]}
-    
+
     # Require authentication in production
     if not credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization header required"
+            detail="Authorization header required",
         )
-    
+
     if not _jwk_client:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Authentication not configured"
+            detail="Authentication not configured",
         )
-    
+
     try:
         # Get signing key
         signing_key = _jwk_client.get_signing_key_from_jwt(credentials.credentials).key
-        
+
         # Decode and verify token
         payload = jwt.decode(
             credentials.credentials,
@@ -50,11 +51,10 @@ def verify_token(credentials: Optional[HTTPAuthorizationCredentials] = Depends(s
             audience=AUDIENCE,
             issuer=ISSUER,
         )
-        
+
         return payload
-        
+
     except jwt.InvalidTokenError as e:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid token: {str(e)}"
-        )
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid token: {str(e)}"
+        ) from e

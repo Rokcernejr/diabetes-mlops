@@ -47,3 +47,14 @@ Selector labels
 app.kubernetes.io/name: {{ include "diabetes-mlops.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{/*
+Name of the service account to use
+*/}}
+{{- define "diabetes-mlops.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- default (include "diabetes-mlops.fullname" .) .Values.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}

@@ -20,10 +20,20 @@ spec:
       labels:
         {{- include "diabetes-mlops.selectorLabels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "diabetes-mlops.serviceAccountName" . }}
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           ports:
             - name: http
               containerPort: 8000
@@ -36,16 +46,18 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secrets.name }}
                   key: mlflow-uri
-            - name: DATABASE_URL
+            - name: JWKS_URL
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.secrets.name }}
-                  key: database-url
-            - name: JWT_SECRET
+                  key: jwks-url
+                  optional: true
+            - name: ISSUER
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.secrets.name }}
-                  key: jwt-secret
+                  key: issuer
+                  optional: true
           livenessProbe:
             httpGet:
               path: /health
@@ -56,7 +68,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /ready
               port: http
             initialDelaySeconds: 5
             periodSeconds: 5
