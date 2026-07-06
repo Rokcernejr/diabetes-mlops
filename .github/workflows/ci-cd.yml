@@ -79,7 +79,9 @@ jobs:
         cache-to: type=gha,mode=max
 
     - name: Start API container
-      run: docker run -d --name api -p 8000:8000 diabetes-mlops:smoke
+      # Empty MLFLOW_TRACKING_URI skips the registry lookup: the container
+      # boots straight onto the DummyModel for fast, dependency-free checks
+      run: docker run -d --name api -p 8000:8000 -e MLFLOW_TRACKING_URI= diabetes-mlops:smoke
 
     - name: Wait for API to come up
       run: |

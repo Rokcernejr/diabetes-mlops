@@ -45,17 +45,27 @@ class ModelLoader:
         # Strategy 1: MLflow registry. The sklearn flavor keeps predict_proba,
         # which the pyfunc flavor does not expose. Imported lazily so unit
         # tests and dummy-model startups never pay the mlflow import chain.
-        try:
-            import mlflow
-            import mlflow.sklearn
+        # Skipped entirely when MLFLOW_TRACKING_URI is set to an empty string.
+        if settings["mlflow_uri"]:
+            try:
+                # Bound the registry attempt: mlflow's defaults (7 retries,
+                # exponential backoff, 120s timeout) stall startup for minutes
+                # when the server is unreachable. Env vars still win if set.
+                os.environ.setdefault("MLFLOW_HTTP_REQUEST_MAX_RETRIES", "1")
+                os.environ.setdefault("MLFLOW_HTTP_REQUEST_TIMEOUT", "10")
 
-            mlflow.set_tracking_uri(settings["mlflow_uri"])
-            model_uri = f"models:/{settings['model_name']}/{settings['model_stage']}"
-            model = mlflow.sklearn.load_model(model_uri)
-            logger.info("Loaded model from MLflow")
-            return model
-        except Exception as e:
-            logger.warning(f"MLflow model loading failed: {e}")
+                import mlflow
+                import mlflow.sklearn
+
+                mlflow.set_tracking_uri(settings["mlflow_uri"])
+                model_uri = (
+                    f"models:/{settings['model_name']}/{settings['model_stage']}"
+                )
+                model = mlflow.sklearn.load_model(model_uri)
+                logger.info("Loaded model from MLflow")
+                return model
+            except Exception as e:
+                logger.warning(f"MLflow model loading failed: {e}")
 
         # Strategy 2: local artifact
         local_model_path = Path(settings["model_path"])
