@@ -88,10 +88,14 @@ run with zero infrastructure and never import MLflow.
 
 GitHub Actions ([.github/workflows/ci-cd.yml](.github/workflows/ci-cd.yml)):
 
-- **pull request** → test job only (lint + full suite); no image is built
-- **push to main** → test → build/push image to ECR (`sha-<sha>` tag) → deploy
-  to the `development` namespace on `conai-cluster`
-- **tag `v*`** → same, but deploys to `production` on `prod-diabetes-eks`
+- **pull request / push to main** → `test` (lint + full suite) and `smoke`
+  (builds the production Docker image on the runner, boots it, and runs
+  `scripts/smoke_test.py` against it) — full diagnostics with **no AWS needed**
+- **tag `v*`** → test → smoke → build/push image to ECR (`sha-<sha>` tag,
+  auto-creating the ECR repo if missing) → deploy to `production` on
+  `prod-diabetes-eks` → Slack notification
+- **"Run workflow" button** (Actions tab) → same full chain on demand,
+  deploying to `development` on `conai-cluster`
 - Required repo secrets (already configured): `AWS_ACCOUNT_ID`,
   `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `SLACK_WEBHOOK`; optional repo
   variables: `MLFLOW_URI`, `JWKS_URL`, `ISSUER`.
