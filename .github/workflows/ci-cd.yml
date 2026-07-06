@@ -6,6 +6,8 @@ on:
     tags: ['v*']
   pull_request:
     branches: [main]
+  # "Run workflow" button: triggers the full build + deploy chain on demand
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -55,11 +57,54 @@ jobs:
     - name: Upload coverage
       uses: codecov/codecov-action@v5
 
-  build:
+  # End-to-end diagnostic on every PR and push: build the production image,
+  # boot it, and run the real smoke test against it. Needs no AWS access.
+  smoke:
     needs: test
     runs-on: ubuntu-latest
-    # Images are only built and pushed on merge/tag, not for every PR
-    if: github.event_name != 'pull_request'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build image (local only, no push)
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        load: true
+        tags: diabetes-mlops:smoke
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Start API container
+      # Empty MLFLOW_TRACKING_URI skips the registry lookup: the container
+      # boots straight onto the DummyModel for fast, dependency-free checks
+      run: docker run -d --name api -p 8000:8000 -e MLFLOW_TRACKING_URI= diabetes-mlops:smoke
+
+    - name: Wait for API to come up
+      run: |
+        for i in $(seq 1 30); do
+          if curl -sf http://localhost:8000/health > /dev/null; then exit 0; fi
+          sleep 2
+        done
+        echo "API did not become healthy within 60s"
+        exit 1
+
+    - name: Run smoke tests
+      run: python3 scripts/smoke_test.py --base-url http://localhost:8000
+
+    - name: Show API logs (diagnostics)
+      if: failure()
+      run: docker logs api
+
+  # The AWS chain below only runs for version tags or the manual
+  # "Run workflow" button — regular pushes and PRs stay green without AWS.
+  build:
+    needs: [test, smoke]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
       image-digest: ${{ steps.build.outputs.digest }}
@@ -81,6 +126,11 @@ jobs:
     - name: Login to ECR
       uses: aws-actions/amazon-ecr-login@v2
 
+    - name: Ensure ECR repository exists
+      run: |
+        aws ecr describe-repositories --repository-names ${{ env.IMAGE_NAME }} \
+          || aws ecr create-repository --repository-name ${{ env.IMAGE_NAME }}
+
     - name: Extract metadata
       id: meta
       uses: docker/metadata-action@v5
@@ -88,7 +138,6 @@ jobs:
         images: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}
         tags: |
           type=ref,event=branch
-          type=ref,event=pr
           type=semver,pattern={{version}}
           type=sha,format=long
 
@@ -105,9 +154,9 @@ jobs:
         cache-to: type=gha,mode=max
 
   deploy:
-    needs: [test, build]
+    needs: [test, smoke, build]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'development' }}
     env:
       DEPLOY_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'development' }}
